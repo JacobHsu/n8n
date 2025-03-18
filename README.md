@@ -1,5 +1,8 @@
 # n8n
 
+## Templates
+[Scrape and summarize webpages with AI](https://n8n.io/workflows/3053-technical-stock-analysis-with-telegram-airtable-and-a-gpt-powered-ai-agent) |  n8n Team
+
 ## References
 
 [用自動化流程工具 n8n](https://www.youtube.com/watch?v=nwYHurRo4e0)  
