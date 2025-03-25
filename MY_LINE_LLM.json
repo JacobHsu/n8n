@@ -1,0 +1,216 @@
+{
+  "name": "MY LINE LLM",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyToken\": \"{{ $('Webhook').item.json.body.events[0].replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{{ $node['Code1'].json['safeText'] }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "58ad5226-3c75-4640-9f04-8a6880d3a9b5",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dQcTtvsJvZPDFvt5",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "842d0e39-d590-4889-a635-a93c343ff195",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let requests\nlet message = {}\nfor (const item of $input.all()) {\n  requests = item.json.body\n}\nif ('events' in requests) {\n  if ('message' in requests['events'][0]) {\n    if (requests['events'][0]['message']['type'] == 'text' &&\n        'text' in requests['events'][0]['message']) {\n      message = {\n        'chatInput': requests['events'][0]['message']['text'],\n        'replyToken': requests['events'][0]['replyToken']\n      }\n    }\n  }\n}\nreturn message"
+      },
+      "id": "a18286ef-073c-4af9-a770-1c7ea538a0cd",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "以繁體中文，純文字輸出，不要帶 HTML。"
+            }
+          ]
+        }
+      },
+      "id": "0dda487b-16ed-4f81-aeb9-0eda608eecc4",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = items[0].json.text;  // 確保這裡正確獲取到了輸入文本\nlet safeText = text.replace(/\\n/g, '\\\\n').replace(/\"/g, '\\\\\"');\nreturn [{json: {safeText: safeText}}]; // 確保輸出是這種格式"
+      },
+      "id": "795a2f9a-cd0d-4699-9e89-6d1dca63cfa5",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "line-message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3df10715-933e-4dad-8d19-5110a5523414",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "9e5aa60e-3406-41dc-a256-41c0a7342e17"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        200,
+        220
+      ],
+      "id": "d9dae75b-89f1-4216-9ed2-d323f8e65e30",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GSLKJQYd0LgTiBYA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1bfa6fc4-189f-4abc-b71b-54822a3206b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5151602c9c8b2ee64fe637df48105f7c075716162458b839391baaa3524b278c"
+  },
+  "id": "eySHyhezHlhkGgxY",
+  "tags": []
+}
