@@ -1,0 +1,337 @@
+{
+  "name": "chart-img",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -80
+      ],
+      "id": "2349c162-7ee2-42e7-94e8-740e03feae7d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f46aee4-70cb-4ee4-b075-014f29d81c5a",
+              "name": "ticker",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -140,
+        -80
+      ],
+      "id": "e585f635-c7c2-4d69-aa1c-afff1c1f4e09",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        -160
+      ],
+      "id": "67f5ab19-8246-4d66-8c52-30907836c02c",
+      "name": "HTTP Download Chart"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "Sr2pZDJR4r8FPTnI1RgFE8RHJipduSkGKv0X1A46"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"theme\": \"dark\",\n  \"interval\": \"15m\",\n  \"symbol\": \"BINANCE:{{ $json.ticker}}\",\n  \"override\": {\n    \"showStudyLastValue\": false\n  },\n  \"studies\": [\n    {\n      \"name\": \"Volume\",\n      \"forceOverlay\": true\n    },\n{\n  \"name\": \"Keltner Channels\"\n},\n    {\n      \"name\": \"MACD\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        -80
+      ],
+      "id": "cfc9e555-fc8b-4de6-8d75-f2c581e6b5b4",
+      "name": "HTTP Chart URL"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "grok-2-vision-1212",
+          "mode": "list",
+          "cachedResultName": "GROK-2-VISION-1212"
+        },
+        "text": "你是一位專業的技術分析師，專門分析加密貨幣與股票走勢圖。我會提供你一張圖表（包含Keltner Channel與MACD）。請直接給出以下內容，使用繁體中文簡潔回答：\n\n【操作建議】：\n- 直接判斷目前應該「買進」、「賣出」或「觀望」，並加上「偏多」或「偏空」的說明。\n- 若建議觀望，請說明突破哪些條件後可以轉為買進或賣出。\n- 每點建議請分行列出，避免冗長描述，重點明確，具備短期操作的實用性。\n\n其他分析過程請省略，僅輸出最終操作建議。",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        520,
+        -160
+      ],
+      "id": "e3e48c63-9b85-4f58-b079-16a4b1f7cb08",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "mW7A44DAYtj4H99z",
+          "name": "OpenAi Grok API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 9-22 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -260,
+        -300
+      ],
+      "id": "354eefa6-03a3-4cb2-a1fe-bd60a6bbdab9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "Sr2pZDJR4r8FPTnI1RgFE8RHJipduSkGKv0X1A46"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"theme\": \"dark\",\n  \"interval\": \"15m\",\n  \"symbol\": \"BINANCE:ETHUSDT\",\n  \"override\": {\n    \"showStudyLastValue\": false\n  },\n  \"studies\": [\n    {\n      \"name\": \"Volume\",\n      \"forceOverlay\": true\n    },\n{\n  \"name\": \"Keltner Channels\"\n},\n    {\n      \"name\": \"MACD\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -300
+      ],
+      "id": "9361ba7f-fd5a-4646-aac1-b9709e1c430f",
+      "name": "HTTP Chart URL ETH"
+    },
+    {
+      "parameters": {
+        "chatId": "453495889",
+        "text": "={{ $json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        740,
+        20
+      ],
+      "id": "3d4cdce0-3988-4459-9693-1fbd6911c543",
+      "name": "Telegram Msg",
+      "webhookId": "bb0590b1-2c22-4da1-b40a-c9eeafca479a",
+      "credentials": {
+        "telegramApi": {
+          "id": "wjmgk6StCA6ZDWcg",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "453495889",
+        "file": "={{ $('HTTP Download Chart').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        740,
+        -160
+      ],
+      "id": "70740577-59cf-4972-9beb-1b26e326aae5",
+      "name": "Telegram Photo",
+      "webhookId": "809871c1-06c5-4392-b372-b2be7e09f837",
+      "credentials": {
+        "telegramApi": {
+          "id": "wjmgk6StCA6ZDWcg",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "ETHUSDT"
+        }
+      }
+    ],
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-04-26T08:33:22.981-04:00",
+          "Readable date": "April 26th 2025, 8:33:22 am",
+          "Readable time": "8:33:22 am",
+          "Day of week": "Saturday",
+          "Year": "2025",
+          "Month": "April",
+          "Day of month": "26",
+          "Hour": "08",
+          "Minute": "33",
+          "Second": "22",
+          "Timezone": "America/New_York (UTC-04:00)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Chart URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Chart URL": {
+      "main": [
+        [
+          {
+            "node": "HTTP Download Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Download Chart": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Telegram Photo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Chart URL ETH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Chart URL ETH": {
+      "main": [
+        [
+          {
+            "node": "HTTP Download Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Photo": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "38650e6e-7f53-4ed4-bc95-e3e75f758b7c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5151602c9c8b2ee64fe637df48105f7c075716162458b839391baaa3524b278c"
+  },
+  "id": "UAE7sg610SqRhBTs",
+  "tags": []
+}
