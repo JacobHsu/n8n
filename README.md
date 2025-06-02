@@ -14,6 +14,11 @@
 [Daily Podcast Summary](https://n8n.io/workflows/2433-daily-podcast-summary/) `api.taddy.org`  
 [Scrape and summarize webpages with AI](https://n8n.io/workflows/3053-technical-stock-analysis-with-telegram-airtable-and-a-gpt-powered-ai-agent) |  n8n Team
 
+
+## API
+
+[SerpApi](https://serpapi.com/): Google Search API
+
 ## chart-img
 
 doc.chart-img [advanced-chart](https://doc.chart-img.com/#advanced-chart)
@@ -24,3 +29,4 @@ doc.chart-img [advanced-chart](https://doc.chart-img.com/#advanced-chart)
 [How I Built A Technical Analyst AI Agent in n8n With No Code](https://www.youtube.com/watch?v=dooXxhGy5Ow&t=184s)  
 [自己在 Zeabur 上架設 n8n ，密碼忘記](https://www.raven.tw/p/ep-17-zeabur-n8n)  
 [用 n8n + Google Gemini 建立智慧 LINE 聊天機器人](https://www.youtube.com/watch?v=14sTKPNFWis)  
+[ n8n 工作流程收藏集](https://github.com/cympotek/n8n-workflows/blob/main/README_zh-hant.md)  
