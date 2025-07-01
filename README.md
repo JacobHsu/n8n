@@ -21,7 +21,8 @@
 
 ## chart-img
 
-doc.chart-img [advanced-chart](https://doc.chart-img.com/#advanced-chart)
+doc.chart-img [advanced-chart](https://doc.chart-img.com/#advanced-chart)  
+[Moving Average Multiple](https://doc.chart-img.com/#moving-average-multiple)  
 
 ## References
 
