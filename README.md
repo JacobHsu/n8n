@@ -11,6 +11,7 @@
 
 ## Templates
 
+[AI-Powered Stock Market Summary Bot](https://n8n.io/workflows/4867-ai-powered-stock-market-summary-bot/) | [openai assistants](https://platform.openai.com/assistants)  
 [Daily Podcast Summary](https://n8n.io/workflows/2433-daily-podcast-summary/) `api.taddy.org`  
 [Scrape and summarize webpages with AI](https://n8n.io/workflows/3053-technical-stock-analysis-with-telegram-airtable-and-a-gpt-powered-ai-agent) |  n8n Team
 
