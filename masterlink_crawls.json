@@ -1,0 +1,333 @@
+{
+  "name": "masterlink_crawls",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -940,
+        -480
+      ],
+      "id": "b00d7be9-a673-4f1a-b3c0-19746dfc9ead",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = `\n6010,(牛牛牛)亞證券!6010,(牛牛牛)亞證券!6012,(牛牛牛)亞-網路!0036003000310064,(牛牛牛)亞-鑫豐;6620,口袋證券!6620,口袋證券;\n`;\n\nconst output = [];\nconst groups = raw.trim().split(';');\n\nfor (const group of groups) {\n  if (!group.trim()) continue;\n\n  const items = group.split('!');\n  let a = '';\n  let brokerName = '';\n  const bMap = new Map();\n\n  for (const item of items) {\n    const parts = item.split(',');\n    if (parts.length < 2) continue;\n    const code = parts[0].trim();\n    const name = parts[1].trim();\n\n    if (!a) {\n      a = code;\n      brokerName = name;\n    }\n\n    // 分點代碼與名稱\n    if (!bMap.has(code)) {\n      bMap.set(code, name);\n    }\n  }\n\n  for (const [b, branchName] of bMap.entries()) {\n    output.push({\n      a: a,\n      b: b,\n      url: `https://newjust.masterlink.com.tw/z/zg/zgb/zgb0.djhtm?a=${a}&b=${b}`,\n      券商名稱: brokerName,\n      分點名稱: branchName\n    });\n  }\n}\n\nreturn output.map(item => ({ json: item }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        -360
+      ],
+      "id": "1b241e1d-dd26-497e-808c-612f82306818",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -500,
+        -360
+      ],
+      "id": "9d1c491f-ec6c-4838-a124-8b9c586b6eff",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -280,
+        -260
+      ],
+      "id": "205bb9cc-cfb1-4fe5-8aea-d08825ea6f2f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {
+          "encoding": "big5hkscs"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ],
+      "id": "738dd6b2-c3ac-484a-add0-880627253328",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = items[0].json.data;\n\n// 抓出所有 <table> 區塊\nconst tables = html.match(/<table[^>]*>[\\s\\S]*?<\\/table>/g);\nif (!tables) throw new Error('❌ 找不到任何 <table> 標籤');\n\n// 解析券商表格\nfunction parseSectionByKeyword(keyword) {\n  const result = [];\n\n  for (const table of tables) {\n    if (!table.includes(keyword)) continue;\n\n    const rows = table.split('</tr>').slice(2); // 跳過標題列\n    for (const row of rows) {\n      const cols = row.match(/<td.*?>([\\s\\S]*?)<\\/td>/g);\n      if (!cols || cols.length < 4) continue;\n\n      const scriptMatch = cols[0].match(/GenLink2stk\\('.*?','(.*?)'\\)/);\n      const name = scriptMatch ? scriptMatch[1] : cols[0].replace(/<.*?>/g, '').trim();\n\n      const buy = parseInt(cols[1].replace(/<.*?>/g, '').replace(/,/g, '').trim()) || 0;\n      const sell = parseInt(cols[2].replace(/<.*?>/g, '').replace(/,/g, '').trim()) || 0;\n      const diff = parseInt(cols[3].replace(/<.*?>/g, '').replace(/,/g, '').trim()) || 0;\n      if (name !== '券商名稱') {\n        result.push({\n          類型: keyword,\n          股票名稱: name,\n          買進金額: buy,\n          賣出金額: sell,\n          差額: diff\n        });\n      }\n    }\n\n    break; // 找到第一個含有該 keyword 的表格就停止\n  }\n\n  return result;\n}\n\n// 執行解析\nconst buyData = parseSectionByKeyword('買超');\nconst sellData = parseSectionByKeyword('賣超');\n\nconsole.log(`✅ 解析完成，共 ${buyData.length} 筆買超、${sellData.length} 筆賣超`);\n\nreturn [...buyData, ...sellData].map(d => ({ json: d }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -260
+      ],
+      "id": "d0959a10-8da6-488a-bdc9-cdf836cbef7d",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rOAK6x-Alkz3tRbY9X2W0Lpm3DicjBpL0VIGnEa50uA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rOAK6x-Alkz3tRbY9X2W0Lpm3DicjBpL0VIGnEa50uA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "日期": "={{ $today }}",
+            "券商名稱": "={{ $('Loop Over Items').item.json['券商名稱'] }}",
+            "分點名稱": "={{ $('Loop Over Items').item.json['分點名稱'] }}",
+            "類型": "={{ $json['類型'] }}",
+            "股票名稱": "={{ $json['股票名稱'] }}",
+            "買進": "={{ $json['買進金額'] }}",
+            "賣出": "={{ $json['賣出金額'] }}",
+            "差額": "={{ $json['差額'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "日期",
+              "displayName": "日期",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "券商名稱",
+              "displayName": "券商名稱",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "分點名稱",
+              "displayName": "分點名稱",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "類型",
+              "displayName": "類型",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "股票名稱",
+              "displayName": "股票名稱",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "買進",
+              "displayName": "買進",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "賣出",
+              "displayName": "賣出",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "差額",
+              "displayName": "差額",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        380,
+        -260
+      ],
+      "id": "dfbd86fa-34f4-4552-87f3-e74554b09b63",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xg9B0F9YGSVKAntI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 14
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1000,
+        -280
+      ],
+      "id": "5c54eee0-ca7c-4d1a-9315-d442907920be",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "591c3d98-b474-4fe3-9f2b-8b870ea66027",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5151602c9c8b2ee64fe637df48105f7c075716162458b839391baaa3524b278c"
+  },
+  "id": "viU4IfOxOYhfa2Ol",
+  "tags": []
+}
