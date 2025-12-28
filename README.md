@@ -20,6 +20,10 @@
 
 [SerpApi](https://serpapi.com/): Google Search API
 
+## AI Agents
+
+[OpenAI Assistants](https://platform.openai.com/assistants)  
+
 ## chart-img
 
 doc.chart-img [advanced-chart](https://doc.chart-img.com/#advanced-chart)  
