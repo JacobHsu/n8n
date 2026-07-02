@@ -1,0 +1,276 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 當有人填寫表單",
+        "height": 224,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        0
+      ],
+      "id": "e8bb4fe4-16f1-45b0-ad46-e855e24cd6b5",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# AI 寫感謝信",
+        "height": 224,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "51c13a56-4cc5-49b6-af36-1bd987da8d35",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# 寄出感謝信（Gmail）",
+        "height": 224,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        0
+      ],
+      "id": "44010aa5-b38a-4a2a-b769-42946e10d375",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# 把這個資料寫入 Google Sheets",
+        "height": 224,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "1fd1a9ea-3316-479b-8ea0-b13e796431f4",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "formTitle": "請填你的回覆",
+        "formDescription": "test",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "請問您的名字是～",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "回饋",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        1152,
+        96
+      ],
+      "id": "8d861359-b228-4b1c-b54c-b1e308ab65d2",
+      "name": "On form submission",
+      "webhookId": "d2b86d7a-1f41-48b6-ae84-feb2e2724f38"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=寫一段感謝信給用戶，如果有好的回饋，跟他說謝謝那個回饋，如果有不好的回饋，跟他說我們會檢討，也希望之後有機會再見面的話，可以讓他看到我們的成長。\n\n你在寫這段文字的時候，就寫一段文字就好了，記得要提及他的名字。如果他有姓氏的話，把姓氏拿掉，讓整個感覺再更親切一點\n\n\n姓名：{{ $json['請問您的名字是～'] }}\n信箱：{{ $json.email }}\n回饋：{{ $json['回饋'] }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1408,
+        96
+      ],
+      "id": "fe3892f1-2d28-46d8-b915-e105dbdf9853",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "R1V4fNK5gHnV9iT1",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.email }}",
+        "subject": "=感謝您的回饋，{{ $('On form submission').item.json['請問您的名字是～'] }}！",
+        "emailType": "html",
+        "message": "=<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 16px;\">\n  <div style=\"background-color: #ffffff; border: 1px solid #eeeeee; border-radius: 12px; padding: 40px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);\">\n    <h1 style=\"color: #ea4b71; font-size: 22px; margin: 0 0 24px;\">感謝您的回饋 🙏</h1>\n    <p style=\"color: #333333; font-size: 15px; line-height: 1.8; white-space: pre-line; margin: 0 0 32px;\">{{ $json.output[0].content[0].text }}</p>\n    <div style=\"text-align: center; margin: 32px 0;\">\n      <a href=\"https://n8n.io\" target=\"_blank\" style=\"background-color: #ea4b71; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;\">了解更多 n8n 自動化</a>\n    </div>\n    <hr style=\"border: none; border-top: 1px solid #eeeeee; margin: 32px 0 16px;\" />\n    <p style=\"color: #aaaaaa; font-size: 12px; text-align: center; margin: 0;\">此信件由自動化流程寄出</p>\n  </div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        96
+      ],
+      "id": "35e9fd2e-67fe-4376-8d93-7c3dcfb7c00b",
+      "name": "Send a message",
+      "webhookId": "a6aeeddf-5ef2-429e-a5bd-20315e5095b2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HbCMeq89RS10HpWQ",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 原始資料庫",
+        "height": 704,
+        "width": 1008,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "329a1dfa-99e3-47e7-be6b-159a8fa7ebd2",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# 新資料",
+        "height": 80,
+        "width": 1008,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        704
+      ],
+      "id": "bc972f33-c53f-412f-8de2-7c54495734b3",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('On form submission').item.json.email }}",
+            "name": "={{ $('On form submission').item.json['請問您的名字是～'] }}",
+            "feedback": "={{ $('On form submission').item.json['回饋'] }}",
+            "thank_you_letter": "={{ $('Message a model').item.json.output[0].content[0].text }}",
+            "submitted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2144,
+        96
+      ],
+      "id": "dc71e067-a17c-4c93-91f1-07515fda5c9b",
+      "name": "Append row in sheet"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "517b0f7a-d350-42ad-bb8a-3dfcad496b1e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "386cdea3ac11bad9970368adf5f61dad1215e0aebf5696fb05357f3923fc96d1"
+  },
+  "nodeGroups": [],
+  "id": "i4zsPSr5hvKS3jWO",
+  "tags": []
+}
